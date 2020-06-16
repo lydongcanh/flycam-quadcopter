@@ -1,27 +1,89 @@
 #include <SoftwareSerial.h>
- 
+#include <MPU9250.h>
+
 #define TX_PIN      7
 #define RX_PIN      6
- 
+#define BAUD        9600
+#define MPU_DELAY   30000
+
+void setup_serial();
+void setup_bluetooth();
+void setup_mpu9250();
+void loop_bluetooth();
+void loop_mpu9250();
+
 SoftwareSerial bluetooth(RX_PIN, TX_PIN);
- 
+MPU9250 IMU(Wire, 0x68);
+
 void setup() {
-  Serial.begin(9600);
-  while (!Serial) {}
-  
-  Serial.println("Configuring, please wait...");
-  
-  bluetooth.begin(9600);
-  Serial.println("Config done");
-  while (!bluetooth) {}
-  }
- 
+  setup_serial();
+  setup_bluetooth();
+  setup_mpu9250();
+}
+
 void loop() {
-  if (bluetooth.available()) {
+  loop_bluetooth();
+  loop_mpu9250();
+}
+
+void setup_serial() {
+  Serial.begin(BAUD);
+  while (!Serial) {}
+}
+
+void setup_bluetooth() {
+  Serial.println("Configuring bluetooth, please wait...");
+  bluetooth.begin(BAUD);
+  Serial.println("Bluetooth configuration done.");
+
+  //while (!bluetooth) {}
+}
+
+void setup_mpu9250() {
+  int status = IMU.begin();
+  if (status < 0) {
+    Serial.println("IMU initialization unsuccessful.");
+    Serial.println("Check IMU wiring or try cycling power.");
+    Serial.print("Status: ");
+    Serial.println(status);
+    //while(status < 0) {}
+  }
+}
+
+void loop_bluetooth() {
+  if (bluetooth.available())
     Serial.write(bluetooth.read());
-  }
   
-  if (Serial.available()) {
+  if (Serial.available())
     bluetooth.write(Serial.read());
+}
+
+int mpu_delay_counter = 0;
+void loop_mpu9250() {
+  if (mpu_delay_counter < MPU_DELAY) {
+    mpu_delay_counter++;
+    return;  
   }
+  mpu_delay_counter = 0;
+  
+  IMU.readSensor();
+  Serial.print(IMU.getAccelX_mss(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getAccelY_mss(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getAccelZ_mss(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getGyroX_rads(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getGyroY_rads(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getGyroZ_rads(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getMagX_uT(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getMagY_uT(), 6);
+  Serial.print("\t");
+  Serial.print(IMU.getMagZ_uT(), 6);
+  Serial.print("\t");
+  Serial.println(IMU.getTemperature_C(), 6);
 }
