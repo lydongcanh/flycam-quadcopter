@@ -1,8 +1,8 @@
 #include <SoftwareSerial.h>
 #include <MPU9250.h>
 
-#define TX_PIN      7
-#define RX_PIN      6
+#define TX_PIN      1
+#define RX_PIN      0
 #define BAUD        9600
 #define MPU_DELAY   30000
 
